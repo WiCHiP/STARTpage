@@ -36,32 +36,35 @@ form {
   text-align: center;
 }
 
-.search-engine-container {
-  display: inline-block;  /* Key for iOS 6 */
+.search-engine-options {
+  margin-bottom: 10px;
+  display: inline-block;
   vertical-align: middle;
-  margin-right: 10px;
+}
+
+.search-engine-label {
+  display: inline-block;
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-right: 5px;
+  cursor: pointer;
+  background-color: white;
+}
+
+.search-engine-radio {
+  display: none;
+}
+
+.search-engine-radio:checked + .search-engine-label {
+  background-color: #e0e0e0;
 }
 
 .search-engine-icon {
-  width: 32px;
-  height: 32px;
-  display: inline-flex; /* Use inline-flex for icon centering */
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  overflow: hidden;
-  background: white;
-}
-
-.search-engine-container select {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin-right: 5px;
 }
 
 input[type="text"] {
@@ -69,8 +72,8 @@ input[type="text"] {
   border: 1px solid #ddd;
   border-radius: 5px;
   width: calc(60% - 10px); /* Adjust width as needed */
-  box-sizing: border-box; /* Include padding in width */
-  display: inline-block;   /* Key for iOS 6 */
+  box-sizing: border-box;
+  display: inline-block;
   vertical-align: middle;
   margin-right: 10px;
 }
@@ -82,7 +85,7 @@ button {
   color: white;
   border-radius: 5px;
   cursor: pointer;
-  display: inline-block;  /* Key for iOS 6 */
+  display: inline-block;
   vertical-align: middle;
 }
 
@@ -92,8 +95,88 @@ button:hover {
 </style>
 </head>
 <body>
-  <script>
-    // ... (your JavaScript code) ...
-  </script>
+
+<div class="container">
+  <div id="time">Loading time...</div>
+  <div id="weather">Loading weather...</div>
+  <form onsubmit="search(event)">
+
+    <div class="search-engine-options">
+      <input type="radio" name="search-engine" id="google" value="google" class="search-engine-radio" checked>
+      <label for="google" class="search-engine-label">
+        <img class="search-engine-icon" src="https://www.google.com/favicon.ico" alt="Google"> Google
+      </label>
+
+      <input type="radio" name="search-engine" id="bing" value="bing" class="search-engine-radio">
+      <label for="bing" class="search-engine-label">
+        <img class="search-engine-icon" src="https://www.bing.com/sa/simg/favicon-2x.ico" alt="Bing"> Bing
+      </label>
+    </div>
+
+    <input type="text" id="search-query" placeholder="Search here..." required autocomplete="off">
+    <button type="submit">Search</button>
+  </form>
+</div>
+
+<script>
+  function updateTime() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    document.getElementById('time').textContent = `${hours}:${minutes}:${seconds}`;
+  }
+  setInterval(updateTime, 1000);
+  updateTime();
+
+  async function fetchWeather(lat, lon) {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data && data.current_weather) {
+        const temperature = Math.round(data.current_weather.temperature);
+        document.getElementById('weather').textContent = `${temperature}°C`;
+      } else {
+        document.getElementById('weather').textContent = 'Weather unavailable';
+      }
+    } catch (error) {
+      document.getElementById('weather').textContent = 'Error loading weather';
+    }
+  }
+
+  function getLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          fetchWeather(latitude, longitude);
+        },
+        () => {
+          document.getElementById('weather').textContent = 'Location unavailable';
+        }
+      );
+    } else {
+      document.getElementById('weather').textContent = 'Geolocation not supported';
+    }
+  }
+  getLocation();
+
+  function search(event) {
+    event.preventDefault();
+
+    const query = document.getElementById('search-query').value;
+    const selectedEngine = document.querySelector('input[name="search-engine"]:checked');
+    const engine = selectedEngine ? selectedEngine.value : 'google';
+
+    const url = engine === 'google'
+      ? `https://www.google.com/search?q=${encodeURIComponent(query)}`
+      : `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+
+    window.location.href = url;
+  }
+
+</script>
+
 </body>
 </html>
