@@ -1,149 +1,237 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Start Page</title>
-<meta name="viewport" content="width=device-width, initial-scale=0.5">
-<style>
-body {
-  font-family: Arial, sans-serif;
-  text-align: center;
-  margin: 0;
-  padding: 0;
-  background: #f4f4f4;
-  color: #333;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #121212;
+            color: white;
+            transition: background 0.3s, color 0.3s;
+        }
 
-.container {
-  width: 320px; /* Fixed width for iOS 6 */
-  margin: 20px auto; /* Reduced margin */
-  padding: 10px; /* Reduced padding */
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
 
-#time {
-  font-size: 1.5em; /* Slightly smaller time */
-  margin-bottom: 5px;
-}
+        #time {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
 
-form {
-  display: block;
-  text-align: center;
-}
+        input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            outline: none;
+        }
 
-.search-engine-options {
-  margin-bottom: 10px;
-  display: block; /* Stack options vertically */
-}
+        .weather {
+            font-size: 24px;
+            margin-top: 15px;
+        }
 
-.search-engine-label {
-  display: inline-block;
-  padding: 5px 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  margin-right: 5px;
-  cursor: pointer;
-  background-color: white;
-}
+        .settings-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            color: white;
+        }
 
-.search-engine-radio {
-  display: none;
-}
+        .settings-menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background: #222;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+        }
 
-.search-engine-radio:checked + .search-engine-label {
-  background-color: #e0e0e0;
-}
+        .settings-menu label {
+            display: block;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
 
-.search-engine-icon {
-  width: 16px;
-  height: 16px;
-  vertical-align: middle;
-  margin-right: 5px;
-}
-
-input[type="text"] {
-  width: 280px; /* Fixed width */
-  padding: 8px; /* Slightly smaller padding */
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  box-sizing: border-box;
-  margin-bottom: 10px;
-}
-
-button {
-  width: 280px; /* Fixed width */
-  padding: 8px 15px; /* Slightly smaller padding */
-  border: none;
-  background: #0078d7;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
-  box-sizing: border-box;
-}
-
-button:hover {
-  background: #005fa1;
-}
-</style>
+        .dark-mode {
+            background-color: white;
+            color: black;
+        }
+    </style>
 </head>
 <body>
 
-<div class="container">
-  <div id="time">Loading time...</div>
-  <form onsubmit="search(event)">
+    <button class="settings-button" onclick="toggleSettings()">⚙️</button>
 
-    <div class="search-engine-options">
-      <input type="radio" name="search-engine" id="google" value="google" class="search-engine-radio" checked>
-      <label for="google" class="search-engine-label">
-        <img class="search-engine-icon" src="https://www.google.com/favicon.ico" alt="Google"> Google
-      </label>
-
-      <input type="radio" name="search-engine" id="bing" value="bing" class="search-engine-radio">
-      <label for="bing" class="search-engine-label">
-        <img class="search-engine-icon" src="https://www.bing.com/sa/simg/favicon-2x.ico" alt="Bing"> Bing
-      </label>
+    <div class="settings-menu" id="settingsMenu">
+        <label>
+            <input type="checkbox" id="darkModeToggle"> Light Mode
+        </label>
+        <label>
+            <input type="checkbox" id="timeFormatToggle"> 24-Hour Time
+        </label>
+        <label>
+            <input type="checkbox" id="tempUnitToggle"> Use Fahrenheit
+        </label>
     </div>
 
-    <input type="text" id="search-query" placeholder="Search here..." required autocomplete="off">
-    <button type="submit">Search</button>
-  </form>
-</div>
+    <div class="container">
+        <div id="time"></div>
+        <form action="https://www.google.com/search" method="GET">
+            <input type="text" name="q" placeholder="Search Google..." autocomplete="off">
+        </form>
+        <div class="weather" id="weather">Loading weather...</div>
+    </div>
 
-<script>
-  function updateTime() {
-    var now = new Date();
-    var hours = now.getHours();
-    var minutes = now.getMinutes();
-    var seconds = now.getSeconds();
+    <script>
+        function updateTime() {
+            let now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let seconds = now.getSeconds();
+            let is24Hour = localStorage.getItem("24HourTime") === "true";
 
-    hours = (hours < 10) ? "0" + hours : hours;
-    minutes = (minutes < 10) ? "0" + minutes : minutes;
-    seconds = (seconds < 10) ? "0" + seconds : seconds;
+            if (!is24Hour) {
+                let ampm = hours >= 12 ? "PM" : "AM";
+                hours = hours % 12 || 12;
+                document.getElementById("time").textContent = 
+                    `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")} ${ampm}`;
+            } else {
+                document.getElementById("time").textContent = 
+                    `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+            }
+        }
 
-    document.getElementById('time').textContent = hours + ":" + minutes + ":" + seconds;
+        function updateWeather(latitude, longitude) {
+            const isFahrenheit = localStorage.getItem("useFahrenheit") === "true";
+            fetch(`https://wttr.in/${latitude},${longitude}?format=%t`)
+                .then(response => response.text())
+                .then(data => {
+                    let temp = parseFloat(data.trim()); // Temperature in Fahrenheit
 
-    // Use setTimeout for more reliable timing on older browsers
-    setTimeout(updateTime, 1000);
-  }
+                    // Convert to Celsius if necessary
+                    if (!isFahrenheit) {
+                        temp = (temp - 32) * 5 / 9; // Convert Fahrenheit to Celsius
+                    }
 
-  // Call updateTime initially to start the clock
-  updateTime();
+                    // Round the temperature to 1 decimal place for Celsius
+                    temp = Math.round(temp * 10) / 10; // Round to 1 decimal place
 
-  function search(event) {
-    event.preventDefault();
+                    // Fetch the city name using reverse geocoding (geocode.xyz)
+                    fetch(`https://geocode.xyz/${latitude},${longitude}?json=1`)
+                        .then(response => response.json())
+                        .then(data => {
+                            let city = data.city ? data.city : "Your location"; // Default city name if not found
 
-    const query = document.getElementById('search-query').value;
-    const selectedEngine = document.querySelector('input[name="search-engine"]:checked');
-    const engine = selectedEngine ? selectedEngine.value : 'google';
+                            // Correct the city case (capitalize)
+                            city = city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
 
-    const url = engine === 'google'
-      ? `https://www.google.com/search?q=${encodeURIComponent(query)}`
-      : `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+                            // Get the weather condition and map it to an emoji
+                            fetch(`https://wttr.in/${latitude},${longitude}?format=%C`)
+                                .then(response => response.text())
+                                .then(condition => {
+                                    let emoji = "❓"; // Default emoji if the condition isn't recognized
 
-    window.location.href = url;
-  }
-</script>
+                                    // Check if it's night time
+                                    const currentTime = new Date();
+                                    const isNight = currentTime.getHours() >= 18 || currentTime.getHours() < 6;
+
+                                    if (condition.toLowerCase().includes("clear")) {
+                                        emoji = isNight ? "🌙" : "☀️"; // Use moon for night and sun for day
+                                    } else if (condition.toLowerCase().includes("cloud")) emoji = "☁️";
+                                    else if (condition.toLowerCase().includes("rain")) emoji = "🌧️";
+                                    else if (condition.toLowerCase().includes("snow")) emoji = "❄️";
+                                    else if (condition.toLowerCase().includes("fog")) emoji = "🌫️";
+                                    else if (condition.toLowerCase().includes("thunder")) emoji = "⛈️";
+
+                                    // Display weather info with the correct unit
+                                    let unit = isFahrenheit ? "°F" : "°C";
+                                    document.getElementById("weather").textContent = `${city}: ${temp}${unit} ${emoji}`;
+                                });
+                        });
+                })
+                .catch(() => document.getElementById("weather").textContent = "Weather unavailable");
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    let latitude = position.coords.latitude;
+                    let longitude = position.coords.longitude;
+                    updateWeather(latitude, longitude);
+                }, function() {
+                    document.getElementById("weather").textContent = "Weather unavailable";
+                });
+            } else {
+                document.getElementById("weather").textContent = "Geolocation not supported";
+            }
+        }
+
+        function toggleSettings() {
+            let menu = document.getElementById("settingsMenu");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        }
+
+        function applyPreferences() {
+            let isDarkMode = localStorage.getItem("darkMode") === "true";
+            document.body.classList.toggle("dark-mode", isDarkMode);
+            document.getElementById("darkModeToggle").checked = isDarkMode;
+
+            let is24Hour = localStorage.getItem("24HourTime") === "true";
+            document.getElementById("timeFormatToggle").checked = is24Hour;
+
+            let useFahrenheit = localStorage.getItem("useFahrenheit") === "true";
+            document.getElementById("tempUnitToggle").checked = useFahrenheit;
+        }
+
+        document.getElementById("darkModeToggle").addEventListener("change", function() {
+            let isChecked = this.checked;
+            localStorage.setItem("darkMode", isChecked);
+            document.body.classList.toggle("dark-mode", isChecked);
+        });
+
+        document.getElementById("timeFormatToggle").addEventListener("change", function() {
+            let isChecked = this.checked;
+            localStorage.setItem("24HourTime", isChecked);
+        });
+
+        document.getElementById("tempUnitToggle").addEventListener("change", function() {
+            let isChecked = this.checked;
+            localStorage.setItem("useFahrenheit", isChecked);
+            // Update weather when the temperature unit is changed
+            getLocation();
+        });
+
+        function detectDarkMode() {
+            let userAgent = navigator.userAgent.toLowerCase();
+            if (userAgent.includes("mac os x") || userAgent.includes("android") || userAgent.includes("iphone")) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("darkMode", "true");
+            }
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
+        getLocation();
+        applyPreferences();
+        detectDarkMode();
+    </script>
 
 </body>
 </html>
