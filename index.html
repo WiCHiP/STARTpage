@@ -102,7 +102,7 @@
         <form action="https://www.google.com/search" method="GET">
             <input type="text" name="q" placeholder="Search Google..." autocomplete="off">
         </form>
-        <div class="weather" id="weather">Loading weather...</div>
+        <div class="weather" id="weather">Loading location...</div>
     </div>
 
     <script>
@@ -124,27 +124,33 @@
             }
         }
 
-        function updateWeather() {
-            const isFahrenheit = localStorage.getItem("useFahrenheit") === "true";
-            fetch("https://wttr.in/?format=%t")
-                .then(response => response.text())
-                .then(temp => {
-                    temp = parseFloat(temp.trim());
-                    if (!isFahrenheit) temp = ((temp - 32) * 5 / 9).toFixed(1);
-                    let unit = isFahrenheit ? "°F" : "°C";
+        function updateLocationAndWeather() {
+            fetch("https://ipapi.co/json/")
+                .then(response => response.json())
+                .then(data => {
+                    let city = data.city;
+                    const isFahrenheit = localStorage.getItem("useFahrenheit") === "true";
 
-                    fetch("https://wttr.in/?format=%C")
+                    fetch("https://wttr.in/?format=%t")
                         .then(response => response.text())
-                        .then(condition => {
-                            let emoji = condition.includes("Clear") ? "☀️" : 
-                                        condition.includes("Cloud") ? "☁️" : 
-                                        condition.includes("Rain") ? "🌧️" : 
-                                        condition.includes("Snow") ? "❄️" : "❓";
-
-                            document.getElementById("weather").textContent = `Weather: ${temp}${unit} ${emoji}`;
-                        });
+                        .then(temp => {
+                            fetch("https://wttr.in/?format=%C")
+                                .then(response => response.text())
+                                .then(condition => {
+                                    temp = parseFloat(temp.trim());
+                                    if (!isFahrenheit) temp = ((temp - 32) * 5 / 9).toFixed(1);
+                                    let unit = isFahrenheit ? "°F" : "°C";
+                                    let emoji = condition.includes("Clear") ? "☀️" : 
+                                                condition.includes("Cloud") ? "☁️" : 
+                                                condition.includes("Rain") ? "🌧️" : 
+                                                condition.includes("Snow") ? "❄️" : "❓";
+                                    document.getElementById("weather").textContent = `${city} • ${temp}${unit} ${emoji}`;
+                                })
+                                .catch(() => document.getElementById("weather").textContent = `${city} • ${temp}${unit} • Condition unavailable`);
+                        })
+                        .catch(() => document.getElementById("weather").textContent = `${city} • Temperature unavailable`);
                 })
-                .catch(() => document.getElementById("weather").textContent = "Weather unavailable");
+                .catch(() => document.getElementById("weather").textContent = "Location unavailable • Temperature unavailable");
         }
 
         function toggleSettings() {
@@ -179,12 +185,12 @@
 
         document.getElementById("tempUnitToggle").addEventListener("change", function() {
             localStorage.setItem("useFahrenheit", this.checked);
-            updateWeather();
+            updateLocationAndWeather(); // Update weather to reflect unit change
         });
 
         setInterval(updateTime, 1000);
         updateTime();
-        updateWeather();
+        updateLocationAndWeather();
         applyPreferences();
     </script>
 
